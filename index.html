@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xtreme IPTV - Movies & Series</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        input {
+            width: 60%;
+            padding: 10px;
+            margin: 20px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .category {
+            margin-top: 20px;
+            text-align: left;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .category h2 {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px;
+            margin: -10px -10px 10px -10px;
+            border-radius: 5px 5px 0 0;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .item:last-child {
+            border-bottom: none;
+        }
+        .item button {
+            padding: 5px 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        #popupPlayer {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background-color: #000;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 80%;
+            max-width: 900px;
+        }
+        #popupPlayer video {
+            width: 100%;
+            border-radius: 10px;
+        }
+        #popupOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+        }
+        #closePopup {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #FF0000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #closePopup:hover {
+            background-color: #d10000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Xtreme IPTV - Movies & Series</h1>
+    <input type="text" id="searchBox" placeholder="Search movies or series..." oninput="searchItems()" />
+    <div id="categories"></div>
+
+    <!-- Popup Player -->
+    <div id="popupOverlay" onclick="closePopup()"></div>
+    <div id="popupPlayer">
+        <video id="videoPlayer" controls autoplay></video>
+        <button id="closePopup" onclick="closePopup()">Close</button>
+    </div>
+
+    <script>
+        const baseURL = "http://xtv.ooo:8080";
+        const username = "52882216";
+        const password = "581881255";
+
+        const categoriesDiv = document.getElementById('categories');
+        const searchBox = document.getElementById('searchBox');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const popupOverlay = document.getElementById('popupOverlay');
+        const popupPlayer = document.getElementById('popupPlayer');
+
+        let allItems = []; // Store all movies and series for search
+
+        // Fetch categories and filter only movies and series
+        async function loadCategories() {
+            try {
+                const response = await fetch(`${baseURL}/player_api.php?username=${username}&password=${password}&action=get_vod_categories`);
+                const categories = await response.json();
+
+                // Filter only movies and series categories
+                const filteredCategories = categories.filter(category =>
+                    category.category_name.toLowerCase().includes('movie') ||
+                    category.category_name.toLowerCase().includes('series')
+                );
+
+                for (const category of filteredCategories) {
+                    const categoryId = category.category_id;
+                    const categoryName = category.category_name;
+
+                    // Fetch VOD (movies/series) for each category
+                    const vodResponse = await fetch(`${baseURL}/player_api.php?username=${username}&password=${password}&action=get_vod_streams&category_id=${categoryId}`);
+                    const vodItems = await vodResponse.json();
+
+                    // Store all items for search
+                    allItems = [...allItems, ...vodItems];
+
+                    // Render category and items
+                    renderCategory(categoryName, vodItems);
+                }
+            } catch (error) {
+                console.error("Failed to load categories:", error);
+                alert("Error fetching categories. Please check the URL or credentials.");
+            }
+        }
+
+        // Render a single category and its items
+        function renderCategory(categoryName, items) {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.classList.add('category');
+
+            const categoryHeader = document.createElement('h2');
+            categoryHeader.textContent = categoryName;
+            categoryDiv.appendChild(categoryHeader);
+
+            items.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('item');
+
+                const itemName = document.createElement('span');
+                itemName.textContent = item.name;
+
+                const playButton = document.createElement('button');
+                playButton.textContent = "Play";
+                playButton.onclick = () => playItem(item.stream_url);
+
+                itemDiv.appendChild(itemName);
+                itemDiv.appendChild(playButton);
+
+                categoryDiv.appendChild(itemDiv);
+            });
+
+            categoriesDiv.appendChild(categoryDiv);
+        }
+
+        // Play a selected item in the popup player
+        function playItem(url) {
+            videoPlayer.src = url;
+            popupOverlay.style.display = "block";
+            popupPlayer.style.display = "block";
+        }
+
+        // Close the popup player
+        function closePopup() {
+            videoPlayer.pause();
+            videoPlayer.src = "";
+            popupOverlay.style.display = "none";
+            popupPlayer.style.display = "none";
+        }
+
+        // Search functionality
+        function searchItems() {
+            const query = searchBox.value.toLowerCase();
+            categoriesDiv.innerHTML = ''; // Clear existing categories
+
+            const filteredItems = allItems.filter(item =>
+                item.name.toLowerCase().includes(query)
+            );
+
+            if (filteredItems.length > 0) {
+                renderCategory('Search Results', filteredItems);
+            } else {
+                categoriesDiv.innerHTML = '<p>No results found.</p>';
+            }
+        }
+
+        // Load categories on page load
+        loadCategories();
+    </script>
+</body>
+</html>
