@@ -1,160 +1,290 @@
-<!DOCTYPE html><html lang="bn">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MJ Live Sports</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@clappr/player/dist/clappr.min.css">
+    <title>MJ-FLIX Playlist Loader</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
-            color: #fff;
             margin: 0;
-            overflow: hidden;
-            position: relative;
-            background: #000;
+            padding: 0;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: #fff;
         }
-        h1, h2 { color: inherit; }
-        #backgroundVideo {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+        .header {
+            text-align: center;
+            padding: 20px 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        .header img {
+            width: 50px;
+            height: 50px;
             object-fit: cover;
-            z-index: -1;
+            border-radius: 50%;
         }
-        #searchBox {
-            width: 80%; max-width: 500px;
-            padding: 10px; margin: 20px auto;
-            font-size: 16px; background: rgba(255,255,255,0.9);
-            color: #333; border: 1px solid #ccc;
-            border-radius: 5px; display: block;
-            z-index: 1;
+        .header h1 {
+            margin: 10px 0;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
         }
-        #playerContainer {
-            width: 90%; max-width: 800px;
-            margin: auto; margin-bottom: 20px;
-            z-index: 1;
+        .social-links {
+            text-align: center;
+            margin-top: 20px;
         }
-        #channelList {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px; padding: 10px;
-            z-index: 1; overflow-y: auto;
-            max-height: 400px; margin: 0 auto;
-            width: 90%; max-width: 800px;
+        .social-links a {
+            margin: 0 10px;
+            color: #fff;
+            font-size: 20px;
+            text-decoration: none;
+            transition: color 0.3s;
         }
-        .channel {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px; border-radius: 10px;
-            cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;
-            text-align: center; animation: fadeIn 0.5s forwards;
-            opacity: 0;
+        .social-links a:hover {
+            color: #ffd700;
         }
-        .channel:hover {
-            transform: scale(1.05);
-            box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.2);
+        .container {
+            padding: 20px;
+            text-align: center;
         }
-        .channel img {
-            width: 100%; height: 60px;
-            object-fit: contain; border-radius: 5px;
-            background: #ddd;
+        .link-box, .search-box {
+            width: 80%;
+            padding: 10px;
+            margin: 10px auto;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
-        .channel h3 {
-            font-size: 12px; margin: 10px 0 0;
+        .load-button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .load-button:hover {
+            background-color: #218838;
+        }
+        .channel-list {
+            width: 80%;
+            margin: 20px auto;
+            text-align: left;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            color: #000;
+        }
+        .channel-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .channel-item:last-child {
+            border-bottom: none;
+        }
+        .channel-item:hover {
+            background-color: #f1f1f1;
+        }
+        .channel-logo {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .channel-info {
+            flex: 1;
+        }
+        .channel-name {
+            font-size: 16px;
+            font-weight: bold;
             color: #333;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .channel-url {
+            font-size: 14px;
+            color: #666;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            margin-top: 20px;
+        }
+        .footer p {
+            margin: 5px 0;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
-    <video id="backgroundVideo" autoplay muted loop>
-        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-    </video><h1>MJ Live Sports</h1>
+    <!-- Header -->
+    <div class="header">
+        <h1 id="MJ-FLIX">MJ-FLIX playlist Loader</h1>
+    </div>
 
-<div id="playerContainer">
-    <div id="player"></div>
-</div>
+    <!-- Social Links -->
+    <div class="social-links">
+       <a href="https://mjplayer.netlify.app/" target="_blank">Video player</a>
+       
+        <a href="https://www.upload-apk.com/en/1yO0kOAMu13y5mW" target="_blank">Movie App</a>
+        
+        <a href="https://t.me/manikcable" target="_blank">Live Stream</a>
+    </div>
 
-<input type="text" id="searchBox" placeholder="চ্যানেলের নাম লিখুন..." onkeyup="searchChannel()">
-<h2>সব চ্যানেল</h2>
-<div id="channelList"></div>
+    <!-- Container -->
+    <div class="container">
+        <!-- Link Box -->
+        <input type="text" id="link-box" class="link-box" placeholder="Paste your playlist URL here...">
+        
+        <!-- Load Button -->
+        <button class="load-button" onclick="loadPlaylist()">Load Playlist</button>
 
-<script src="https://cdn.jsdelivr.net/npm/@clappr/player"></script>
-<script>
-    let player = new Clappr.Player({
-        source: "",
-        parentId: "#player",
-        autoPlay: true,
-        mute: false,
-        height: 400,
-        width: "100%",
-        playback: { controls: true },
-    });
+        <!-- Search Box -->
+        <input type="text" id="search-box" class="search-box" placeholder="Search channel by name..." oninput="searchChannel()">
+        
+        <!-- Channel List -->
+        <div id="channel-list" class="channel-list">
+            <!-- Channels will be dynamically added here -->
+        </div>
+    </div>
+<script async="async" data-cfasync="false" src="//pl25668544.profitablecpmrate.com/9836b306db829e2bea7ca60a527e5e79/invoke.js"></script>
+<div id="container-9836b306db829e2bea7ca60a527e5e79"></div><script type='text/javascript' src='//pl25668538.profitablecpmrate.com/19/5c/18/195c186416f0a12831ae2a4ee87763df.js'></script><script async="async" data-cfasync="false" src="//pl25668544.profitablecpmrate.com/9836b306db829e2bea7ca60a527e5e79/invoke.js"></script>
+<div id="container-9836b306db829e2bea7ca60a527e5e79"></div><script async="async" data-cfasync="false" src="//pl25668544.profitablecpmrate.com/9836b306db829e2bea7ca60a527e5e79/invoke.js"></script>
+<div id="container-9836b306db829e2bea7ca60a527e5e79"></div><script async="async" data-cfasync="false" src="//pl25668544.profitablecpmrate.com/9836b306db829e2bea7ca60a527e5e79/invoke.js"></script>
+<div id="container-9836b306db829e2bea7ca60a527e5e79"></div> 
 
-    const m3uUrl = "https://m3u.work/CTZz13nw";
+     <a href="https://www.upload-apk.com/en/1yO0kOAMu13y5mW" target="_blank">
+      <img src="https://i.ibb.co.com/mJHR9Kn/Picsart-25-01-25-10-26-51-615.jpg" alt="Resizable Image" weight="250" height="100">
+     </a> 
+    <!-- Footer -->
+   <div class="footer">
+        <p>© 2025 MJ-FLIX Playlist Loader. All rights reserved.</p>
+        <p>Developed by ꧁༺🅨︎🅐︎🅝︎🅖︎🅧︎🅘︎🅐︎🅝︎🅖︎༻꧂.</p>
+    </div>
 
-    async function loadM3U() {
-        try {
-            const response = await fetch(m3uUrl);
-            if (!response.ok) throw new Error("Failed to fetch M3U playlist");
-            const text = await response.text();
-            const lines = text.split("\n");
-            let channels = [];
-            for (let i = 0; i < lines.length; i++) {
-                if (lines[i].startsWith("#EXTINF")) {
-                    const nameMatch = lines[i].match(/,(.+)/);
-                    const logoMatch = lines[i].match(/tvg-logo="(.+?)"/);
-                    let name = nameMatch ? nameMatch[1] : "Unknown";
-                    name = name.replace(/\s*-\s*[^-]+$/, "").trim();
-                    const logo = logoMatch ? logoMatch[1] : "https://via.placeholder.com/150";
-                    const url = lines[i + 1] ? lines[i + 1].trim() : "";
-                    if (url.startsWith("http")) {
-                        channels.push({ name, logo, url });
-                    }
-                }
+    <script>
+        let channels = [];
+
+        function loadPlaylist() {
+            const playlistUrl = document.getElementById('link-box').value;
+            if (playlistUrl) {
+                fetch(playlistUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.text();
+                    })
+                    .then(data => {
+                        channels = parsePlaylist(data);
+                        renderChannels(channels);
+                    })
+                    .catch(error => {
+                        alert('Error loading playlist: ' + error.message);
+                    });
+            } else {
+                alert('Please paste a valid playlist URL.');
             }
-            displayChannels(channels);
-        } catch (error) {
-            console.error("Error loading M3U:", error);
-            alert("Failed to load channels. Please try again later.");
         }
-    }
 
-    function displayChannels(channels) {
-        const list = document.getElementById("channelList");
-        list.innerHTML = "";
-        channels.forEach((channel, index) => {
-            const div = document.createElement("div");
-            div.classList.add("channel");
-            div.innerHTML = `<img src="${channel.logo}" alt="${channel.name}"><h3>${channel.name}</h3>`;
-            div.onclick = () => playChannel(channel.url);
-            div.style.animationDelay = `${index * 0.2}s`;
-            list.appendChild(div);
-        });
-        if (channels.length > 0) {
-            playChannel(channels[0].url);
+        function parsePlaylist(data) {
+            const lines = data.split('\n');
+            const parsedChannels = [];
+            let currentChannel = {};
+
+            lines.forEach(line => {
+                if (line.startsWith('#EXTINF')) {
+                    if (currentChannel.name) {
+                        parsedChannels.push(currentChannel);
+                    }
+                    const info = line.split(',');
+                    currentChannel = {
+                        name: info[1]?.trim() || 'Unknown',
+                        logo: extractLogo(line),
+                        url: ''
+                    };
+                } else if (line.startsWith('http')) {
+                    currentChannel.url = line.trim();
+                }
+            });
+
+            if (currentChannel.name) {
+                parsedChannels.push(currentChannel);
+            }
+            return parsedChannels;
         }
-    }
 
-    function playChannel(url) {
-        player.load({ source: url });
-        document.getElementById("playerContainer").scrollIntoView({ behavior: "smooth" });
-    }
+        function extractLogo(extinfLine) {
+            const match = extinfLine.match(/tvg-logo="([^"]+)"/);
+            return match ? match[1] : 'https://via.placeholder.com/50x50.png?text=Logo';
+        }
 
-    function searchChannel() {
-        const query = document.getElementById("searchBox").value.toLowerCase().trim();
-        const channels = document.querySelectorAll(".channel");
-        channels.forEach(channel => {
-            const name = channel.querySelector("h3").innerText.toLowerCase();
-            channel.style.display = name.includes(query) ? "block" : "none";
-        });
-    }
+        function renderChannels(channels) {
+            const channelList = document.getElementById('channel-list');
+            channelList.innerHTML = ''; // Clear previous channels
 
-    window.onload = loadM3U;
-</script>
+            if (channels.length === 0) {
+                channelList.innerHTML = '<p>No channels found in the playlist.</p>';
+                return;
+            }
 
+            channels.forEach((channel, index) => {
+                const channelItem = document.createElement('div');
+                channelItem.classList.add('channel-item');
+                channelItem.innerHTML = `
+                    <img class="channel-logo" src="${channel.logo}" alt="Logo">
+                    <div class="channel-info">
+                        <div class="channel-name">${index + 1}. ${channel.name}</div>
+                        <div class="channel-url">${channel.url}</div>
+                    </div>
+                `;
+                channelItem.onclick = () => playChannel(channel.url);
+                channelList.appendChild(channelItem);
+            });
+        }
+
+        function playChannel(url) {
+            const videoPlayer = document.createElement('video');
+            videoPlayer.src = url;
+            videoPlayer.controls = true;
+            videoPlayer.autoplay = true;
+            videoPlayer.style.width = '100%';
+
+            const popup = document.createElement('div');
+            popup.style.position = 'fixed';
+            popup.style.top = '0';
+            popup.style.left = '0';
+            popup.style.width = '100vw';
+            popup.style.height = '100vh';
+            popup.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            popup.style.display = 'flex';
+            popup.style.justifyContent = 'center';
+            popup.style.alignItems = 'center';
+            popup.style.zIndex = '1000';
+
+            popup.onclick = () => popup.remove();
+            popup.appendChild(videoPlayer);
+
+            document.body.appendChild(popup);
+        }
+
+        function searchChannel() {
+            const searchTerm = document.getElementById('search-box').value.toLowerCase();
+            const filteredChannels = channels.filter(channel =>
+                channel.name.toLowerCase().includes(searchTerm)
+            );
+            renderChannels(filteredChannels);
+        }
+    </script>
 </body>
 </html>
